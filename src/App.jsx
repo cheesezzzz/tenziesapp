@@ -1,20 +1,23 @@
 import Die from "./components/Die";
 import { useEffect, useState } from "react";
-import { nanoid } from "nanoid";
+import { nanoid, random } from "nanoid";
+import Confetti from "react-confetti";
 
 export default function App() {
   const [randomDice, setRandomDice] = useState(allNewDice());
   const [tenzies, setTenzies] = useState(false);
+  const [rolls, setRolls] = useState(0)
 
   useEffect(() => {
-    // TODO fix the logic for this
-    randomDice.forEach((die) => {
-      if (die.isHeld && die.value) {
-        setTenzies(true);
-        console.log("You won!");
-      }
-    });
+    const allHeld = randomDice.every((die) => die.isHeld);
+    const firstValue = randomDice[0].value;
+    const allSameValue = randomDice.every((die) => die.value === firstValue);
+    if (allHeld && allSameValue) {
+      setTenzies(true);
+      console.log("You won!");
+    }
   }, [randomDice]);
+
 
   function generateNewDie() {
     return {
@@ -33,11 +36,27 @@ export default function App() {
   }
 
   function rollDice() {
-    setRandomDice((oldDice) =>
-      oldDice.map((existingDice) => {
-        return existingDice.isHeld ? existingDice : generateNewDie();
-      })
-    );
+    // if(tenzies) {
+    //   setTenzies(false)
+    //   setRandomDice((prevDice) => 
+    //     prevDice.map((existingDice) => {
+    //       return existingDice.isHeld && !existingDice.isHeld && generateNewDie()
+    //     })
+    //   )
+    // }
+
+    if(!tenzies) {
+      setRolls(prevRoll => prevRoll + 1)
+      setRandomDice((oldDice) =>
+        oldDice.map((existingDice) => {
+          return existingDice.isHeld ? existingDice : generateNewDie();
+        })
+      );
+    } else {
+      setRolls(0)
+      setTenzies(false)
+      setRandomDice(allNewDice())
+    }
   }
 
   function allNewDice() {
@@ -65,7 +84,8 @@ export default function App() {
       className="w-96 h-96  bg-white
      rounded-md flex flex-col justify-center items-center"
     >
-      <h1 className="text-2xl font-bold">Tenzies</h1>
+      {tenzies && <Confetti />}
+      <h1 className="text-2xl font-bold">{tenzies ? 'YOU WON!!!' : 'Tenzies'}</h1>
       <p className="text-center text-sm max-w-xs">
         Roll until all dice are the same. Click each die to freeze it at its
         current value between rolls.
@@ -78,8 +98,15 @@ export default function App() {
           className="bg-[#5035FF] w-24 h-9 text-white rounded shadow-lg"
           onClick={rollDice}
         >
-          Roll
+          {tenzies ? "New Game" : "Roll"}
         </button>
+        
+      </div>
+      <div className=" pt-4 flex space-x-4">
+        {/* Roll Tracker */}
+        <div>
+          Rolls: {rolls} 
+        </div>
       </div>
     </main>
   );
